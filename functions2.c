@@ -64,31 +64,32 @@ int print_pointer(va_list types, char buffer[],
  * Return: Number of chars printed
  */
 int print_non_printable(va_list types, char buffer[],
-                        int flags, int width, int precision, int size)
+	int flags, int width, int precision, int size)
 {
-    int i = 0, offset = 0;
-    char *str = va_arg(types, char *);
+	int i = 0, offset = 0;
+	char *str = va_arg(types, char *);
 
-    UNUSED(flags);
-    UNUSED(width);
-    UNUSED(size);
+	UNUSED(flags);
+	UNUSED(width);
+	UNUSED(precision);
+	UNUSED(size);
 
-    if (str == NULL)
-        return (write(1, "(null)", 6));
+	if (str == NULL)
+		return (write(1, "(null)", 6));
 
-    while (str[i] != '\0' && (precision == 0 || i < precision))
-    {
-        if (is_printable(str[i]))
-            buffer[i + offset] = str[i];
-        else
-            offset += append_hexa_code(str[i], buffer, i + offset);
+	while (str[i] != '\0')
+	{
+		if (is_printable(str[i]))
+			buffer[i + offset] = str[i];
+		else
+			offset += append_hexa_code(str[i], buffer, i + offset);
 
-        i++;
-    }
+		i++;
+	}
 
-    buffer[i + offset] = '\0';
+	buffer[i + offset] = '\0';
 
-    return (write(1, buffer, i + offset));
+	return (write(1, buffer, i + offset));
 }
 
 /************************* PRINT REVERSE *************************/
@@ -102,38 +103,38 @@ int print_non_printable(va_list types, char buffer[],
  * @size: Size specifier
  * Return: Numbers of chars printed
  */
+
 int print_reverse(va_list types, char buffer[],
-                  int flags, int width, int precision, int size)
+	int flags, int width, int precision, int size)
 {
-    char *str;
-    int i, count = 0;
+	char *str;
+	int i, count = 0;
 
-    UNUSED(buffer);
-    UNUSED(flags);
-    UNUSED(width);
-    UNUSED(size);
+	UNUSED(buffer);
+	UNUSED(flags);
+	UNUSED(width);
+	UNUSED(size);
 
-    str = va_arg(types, char *);
+	str = va_arg(types, char *);
 
-    if (str == NULL)
-    {
-        UNUSED(precision);
-        str = ")Null(";
-    }
+	if (str == NULL)
+	{
+		UNUSED(precision);
 
-    for (i = 0; str[i] != '\0' && (precision == 0 || i < precision); i++)
-        ;
+		str = ")Null(";
+	}
+	for (i = 0; str[i]; i++)
+		;
 
-    for (i = i - 1; i >= 0; i--)
-    {
-        char z = str[i];
-        write(1, &z, 1);
-        count++;
-    }
+	for (i = i - 1; i >= 0; i--)
+	{
+		char z = str[i];
 
-    return (count);
+		write(1, &z, 1);
+		count++;
+	}
+	return (count);
 }
-
 /************************* PRINT A STRING IN ROT13 *************************/
 /**
  * print_rot13string - Print a string in rot13.
