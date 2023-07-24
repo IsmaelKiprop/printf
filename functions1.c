@@ -12,27 +12,45 @@
  * Return: Number of chars printed.
  */
 int print_unsigned(va_list types, char buffer[],
-	int flags, int width, int precision, int size)
+                   int flags, int width, int precision, int size)
 {
-	int i = BUFF_SIZE - 2;
-	unsigned long int num = va_arg(types, unsigned long int);
+    int i = BUFF_SIZE - 2;
+    unsigned long int num = va_arg(types, unsigned long int);
+    unsigned long int init_num = num;
 
-	num = convert_size_unsgnd(num, size);
+    num = convert_size_unsgnd(num, size);
 
-	if (num == 0)
-		buffer[i--] = '0';
+    if (num == 0)
+        buffer[i--] = '0';
 
-	buffer[BUFF_SIZE - 1] = '\0';
+    buffer[BUFF_SIZE - 1] = '\0';
 
-	while (num > 0)
-	{
-		buffer[i--] = (num % 10) + '0';
-		num /= 10;
-	}
+    while (num > 0)
+    {
+        buffer[i--] = (num % 10) + '0';
+        num /= 10;
+    }
 
-	i++;
+    if (precision == 0 && i == BUFF_SIZE - 2)
+        return (0); // When precision is 0 and the number is 0, no character is printed
 
-	return (write_unsgnd(0, i, buffer, flags, width, precision, size));
+    if (precision > 0 && precision > BUFF_SIZE - i - 2)
+    {
+        int diff = precision - (BUFF_SIZE - i - 2);
+        int j;
+        for (j = BUFF_SIZE - 2; j > i; j--)
+        {
+            if (j - diff >= i)
+                buffer[j] = buffer[j - diff];
+            else
+                buffer[j] = '0';
+        }
+        i -= diff;
+    }
+
+    i++;
+
+    return (write_unsgnd(0, i, buffer, flags, width, 0, size));
 }
 
 /************* PRINT UNSIGNED NUMBER IN OCTAL  ****************/
@@ -47,34 +65,50 @@ int print_unsigned(va_list types, char buffer[],
  * Return: Number of chars printed
  */
 int print_octal(va_list types, char buffer[],
-	int flags, int width, int precision, int size)
+                int flags, int width, int precision, int size)
 {
+    int i = BUFF_SIZE - 2;
+    unsigned long int num = va_arg(types, unsigned long int);
+    unsigned long int init_num = num;
 
-	int i = BUFF_SIZE - 2;
-	unsigned long int num = va_arg(types, unsigned long int);
-	unsigned long int init_num = num;
+    UNUSED(width);
 
-	UNUSED(width);
+    num = convert_size_unsgnd(num, size);
 
-	num = convert_size_unsgnd(num, size);
+    if (num == 0)
+        buffer[i--] = '0';
 
-	if (num == 0)
-		buffer[i--] = '0';
+    buffer[BUFF_SIZE - 1] = '\0';
 
-	buffer[BUFF_SIZE - 1] = '\0';
+    while (num > 0)
+    {
+        buffer[i--] = (num % 8) + '0';
+        num /= 8;
+    }
 
-	while (num > 0)
-	{
-		buffer[i--] = (num % 8) + '0';
-		num /= 8;
-	}
+    if (flags & F_HASH && init_num != 0)
+        buffer[i--] = '0';
 
-	if (flags & F_HASH && init_num != 0)
-		buffer[i--] = '0';
+    i++;
 
-	i++;
+    if (precision == 0 && i == BUFF_SIZE - 2 && buffer[i] == '0')
+        return (0); // When precision is 0 and the number is 0, no character is printed
 
-	return (write_unsgnd(0, i, buffer, flags, width, precision, size));
+    if (precision > 0 && precision > BUFF_SIZE - i - 2)
+    {
+        int diff = precision - (BUFF_SIZE - i - 2);
+        int j;
+        for (j = BUFF_SIZE - 2; j > i; j--)
+        {
+            if (j - diff >= i)
+                buffer[j] = buffer[j - diff];
+            else
+                buffer[j] = '0';
+        }
+        i -= diff;
+    }
+
+    return (write_unsgnd(0, i, buffer, flags, width, 0, size));
 }
 
 /************** PRINT UNSIGNED NUMBER IN HEXADECIMAL **************/
@@ -126,36 +160,53 @@ int print_hexa_upper(va_list types, char buffer[],
  * @size: Size specifier
  * @size: Size specification
  * Return: Number of chars printed
- */
+*/
 int print_hexa(va_list types, char map_to[], char buffer[],
-	int flags, char flag_ch, int width, int precision, int size)
+               int flags, char flag_ch, int width, int precision, int size)
 {
-	int i = BUFF_SIZE - 2;
-	unsigned long int num = va_arg(types, unsigned long int);
-	unsigned long int init_num = num;
+    int i = BUFF_SIZE - 2;
+    unsigned long int num = va_arg(types, unsigned long int);
+    unsigned long int init_num = num;
 
-	UNUSED(width);
+    UNUSED(width);
 
-	num = convert_size_unsgnd(num, size);
+    num = convert_size_unsgnd(num, size);
 
-	if (num == 0)
-		buffer[i--] = '0';
+    if (num == 0)
+        buffer[i--] = '0';
 
-	buffer[BUFF_SIZE - 1] = '\0';
+    buffer[BUFF_SIZE - 1] = '\0';
 
-	while (num > 0)
-	{
-		buffer[i--] = map_to[num % 16];
-		num /= 16;
-	}
+    while (num > 0)
+    {
+        buffer[i--] = map_to[num % 16];
+        num /= 16;
+    }
 
-	if (flags & F_HASH && init_num != 0)
-	{
-		buffer[i--] = flag_ch;
-		buffer[i--] = '0';
-	}
+    if (flags & F_HASH && init_num != 0)
+    {
+        buffer[i--] = flag_ch;
+        buffer[i--] = '0';
+    }
 
-	i++;
+    i++;
 
-	return (write_unsgnd(0, i, buffer, flags, width, precision, size));
+    if (precision == 0 && i == BUFF_SIZE - 2 && buffer[i] == '0')
+        return (0); // When precision is 0 and the number is 0, no character is printed
+
+    if (precision > 0 && precision > BUFF_SIZE - i - 2)
+    {
+        int diff = precision - (BUFF_SIZE - i - 2);
+        int j;
+        for (j = BUFF_SIZE - 2; j > i; j--)
+        {
+            if (j - diff >= i)
+                buffer[j] = buffer[j - diff];
+            else
+                buffer[j] = '0';
+        }
+        i -= diff;
+    }
+
+    return (write_unsgnd(0, i, buffer, flags, width, 0, size));
 }
